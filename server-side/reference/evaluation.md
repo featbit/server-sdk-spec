@@ -1,54 +1,8 @@
-# User Context and Feature Flag Evaluation
+# Evaluation Compatibility Reference
 
-[Specification index](../README.md) | [General requirements](general.md)
+[Specification index](../README.md) | [Evaluation behavior](../spec/evaluation.md)
 
-The scope and requirement levels in [General Requirements](general.md) apply to this module.
-
-## User context
-
-A user consists of a required stable string key, an optional name defaulting to `""`, and custom string attributes. Attribute lookup follows these rules:
-
-| Property | Value |
-| --- | --- |
-| `keyId` | User key. |
-| `name` | User name. |
-| Existing custom property | Its string value. |
-| Missing custom property | Not found. |
-| Empty or whitespace-only property name | Invalid; treat as not found. |
-
-Attribute lookup MUST preserve both presence and value so that a missing attribute is distinguishable from an existing attribute whose value is `""`. Reserved properties take precedence over custom attributes, preventing custom fields from overriding user identity.
-
-## Decision order
-
-For each typed evaluation, use this exact precedence:
-
-1. If the client is not initialized, return the caller's fallback with `ClientNotReady`.
-2. Look up the active flag. If absent or archived, return fallback with `Error / flag not found`.
-3. If the flag is disabled, return its configured disabled variation with `Off`. This is a normal result, not the caller's fallback.
-4. Search individual targets in stored order. The first target containing the user key wins, with `TargetMatch`.
-5. Search rules in stored order. The first rule whose conditions all match wins. Select its first matching rollout variation and return `RuleMatch`.
-6. If no target or rule matches, select the first matching fallthrough rollout variation and return `Fallthrough`.
-7. Resolve the selected variation ID, produce evaluation analytics eligibility, and convert the selected string value to the requested type.
-
-A matched rule with no matching rollout MUST produce `Error / malformed flag`; it MUST NOT silently proceed to later rules or fallthrough. A missing selected variation is also malformed data. The hardening boundary in [error isolation](error_isolation.md) covers every selection path, including individual targets.
-
-The declared `variationType` is metadata: typed APIs attempt conversion of the selected string rather than rejecting solely on that declaration. SDKs MUST preserve that behavior.
-
-## Result details and conversion
-
-| Reason kind | Meaning | Suggested reason text |
-| --- | --- | --- |
-| `ClientNotReady` | No initialized data state. | `client not ready` |
-| `Off` | Configured disabled variation. | `flag off` |
-| `TargetMatch` | Individual target matched. | `target match` |
-| `RuleMatch` | Target rule matched. | `match rule <rule-name>` |
-| `Fallthrough` | Default rollout selected. | `fall through targets and rules` |
-| `WrongType` | Selected value cannot be converted. | `type mismatch` |
-| `Error` | Missing flag, malformed data, or another contained evaluation failure. | `flag not found`, `malformed flag`, or a diagnostic reason. |
-
-Every detail MUST include flag key, value, variation ID, kind, and reason. Fallback results MUST contain the caller's exact fallback and an empty variation ID. Successful results MUST contain the selected variation's ID. Reason categories are stable API contracts; consumers SHOULD NOT parse human-readable reason text.
-
-Strings are returned unchanged. Booleans accept case-insensitive `true` and `false`; do not use generic truthiness. Integers MUST reject fractional values and overflow. Floating-point APIs MUST preserve their documented precision.
+These rules define results that must agree across languages. Internal APIs, storage structures, and execution models are unrestricted.
 
 ## Rules and condition operators
 
@@ -70,7 +24,7 @@ Before applying an operator, look up the condition property and check whether it
 
 Return false when an attribute is missing or either operand is null, even for boolean and negative operators. Numeric parse failures and NaN comparisons return false. Empty strings remain actual operands when the attribute exists. `[]` is a valid membership list: `IsOneOf` is false and `NotOneOf` is true for an existing, non-null user operand.
 
-**Hardening requirements:** use ordinal, locale-independent string operations and the finite numeric parsing rules above. An invalid list JSON value, invalid regex, or regex timeout MUST become a contained malformed-data outcome for the affected flag, rather than being inverted into a successful negative condition. Regex execution MUST have a bounded runtime or use an engine with bounded evaluation characteristics. SDKs MUST document their supported regex dialect and test common patterns across languages; unsupported patterns MUST NOT be silently reinterpreted.
+Use locale-independent string operations and finite numeric parsing. An invalid list JSON value, invalid regex, or regex timeout MUST become a contained malformed-data outcome for the affected flag, rather than being inverted into a successful negative condition. Regex execution MUST have a bounded runtime or use an engine with bounded evaluation characteristics. SDKs MUST document their supported regex dialect and test common patterns across languages; unsupported patterns MUST NOT be silently reinterpreted.
 
 ## Segment matching
 
@@ -136,6 +90,3 @@ An evaluation event's `sendToExperiment` is calculated independently from its se
 
 Do not reuse the flag bucket for experiment sampling: the `expt` prefix produces a different assignment. `exptRollout` is divided by the selected variation's dispatch width; it is not used directly as a percentage threshold. Its value MUST be finite and non-negative; values larger than the width are clamped by the ratio calculation.
 
-## All-variations API
-
-Return one raw-string evaluation detail per active flag and record no analytics events. Ordering is unspecified. Evaluate the committed store without the typed API's initialization check; an empty store returns an empty array.
