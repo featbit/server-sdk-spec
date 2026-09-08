@@ -71,4 +71,4 @@ Logs MUST redact environment secrets, authorization headers, and token-bearing U
 
 ## Performance and extensibility
 
-Evaluation SHOULD perform bounded local work, with no disk/network I/O and no global lock shared with network delivery. 
+Evaluation SHOULD perform bounded local work, with no disk/network I/O and no global lock shared with network delivery.
