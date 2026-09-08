@@ -2,7 +2,7 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 ## Collection rules
 
@@ -47,7 +47,7 @@ An evaluation event has this structure:
 ]
 ```
 
-A custom metric event has this structure; `dotnet-server-side` is the reference SDK identifier:
+A custom metric event has this structure. `<server-supported-sdk-app-type>` is a placeholder that MUST be replaced with the target service's identifier for the SDK; it is not a literal wire value:
 
 ```json
 [
@@ -55,7 +55,7 @@ A custom metric event has this structure; `dotnet-server-side` is the reference 
     "user": {"keyId": "user-123", "name": "", "customizedProperties": []},
     "metrics": [
       {
-        "appType": "dotnet-server-side",
+        "appType": "<server-supported-sdk-app-type>",
         "route": "index/metric",
         "type": "CustomEvent",
         "eventName": "checkout-completed",
@@ -67,9 +67,9 @@ A custom metric event has this structure; `dotnet-server-side` is the reference 
 ]
 ```
 
-Other languages MUST select the corresponding server-supported SDK `appType` and document it; Preserve `route`, `type`, and the other field names. An integration test MUST verify the chosen identifier with the target service.
+SDKs MUST select the corresponding server-supported SDK `appType` and document it; preserve `route`, `type`, and the other field names. An integration test MUST verify the chosen identifier with the target service.
 
-User custom attributes are an array of `{name, value}` objects, not a dictionary. Variation values remain strings. Evaluation and metric objects may be mixed in one request. The reference sends individual payload objects without deduplication or aggregation; ports MUST NOT silently sample, merge, or deduplicate recorded events.
+User custom attributes are an array of `{name, value}` objects, not a dictionary. Variation values remain strings. Evaluation and metric objects may be mixed in one request. Send individual payload objects without deduplication or aggregation; SDKs MUST NOT silently sample, merge, or deduplicate recorded events.
 
 ## Queue, buffering, and batching
 
@@ -77,11 +77,11 @@ Use a bounded, non-blocking ingress queue. When capacity is exhausted, drop the 
 
 A single dispatcher SHOULD own its mutable buffer. On a flush trigger, it takes an immutable snapshot and releases the buffer for subsequent records. A worker splits that snapshot into requests containing at most the configured number of payload objects, sending those requests sequentially. Multiple workers may overlap; server delivery order is not guaranteed.
 
-In the reference, the ingress queue and buffer each have a 10,000-event capacity, and worker snapshots hold additional events. Thus `MaxEventsInQueue` is not a total process-memory limit. New SDKs MUST bound the ingress queue, buffer, number of snapshots in flight, and message/payload bytes; consider their combined worst-case memory budget.
+By default, the ingress queue and buffer each have a 10,000-event capacity, and worker snapshots hold additional events. Thus the queue-capacity setting is not a total process-memory limit. New SDKs MUST bound the ingress queue, buffer, number of snapshots in flight, and message/payload bytes; consider their combined worst-case memory budget.
 
 ## Send outcomes and retry
 
-| HTTP/transport outcome | Reference classification | Required handling |
+| HTTP/transport outcome | Classification | Required handling |
 | --- | --- | --- |
 | Any `2xx` response | Succeeded | Finish the batch. |
 | `400`, `408`, `429` | Recoverable | Retry within the attempt budget. |
@@ -90,9 +90,9 @@ In the reference, the ingress queue and buffer each have a 10,000-event capacity
 | Transient network exception | Recoverable | Retry within the attempt budget. |
 | Explicit shutdown cancellation | Canceled | Stop promptly; do not retry. |
 
-Do not assume every `4xx` is terminal; `400` is intentionally recoverable in the reference. Event-delivery rejection MUST NOT shut down the synchronizer or evaluator.
+Do not assume every `4xx` is terminal; `400` is intentionally recoverable under this policy. Event-delivery rejection MUST NOT shut down the synchronizer or evaluator.
 
-The reference treats cancellation attributed to its own per-attempt deadline as failed without retry; other request-timeout exceptions are recoverable.
+Cancellation attributed to the sender's per-attempt deadline is classified as failed without retry; other request-timeout exceptions are recoverable.
 
 Retries reuse the original event payload and timestamps. Delivery is best effort: events may be dropped on overflow, failed attempts, shutdown timeout, or process exit, and retries may cause duplicates if the server accepted a request whose response was lost. The SDK MUST NOT promise durable, at-least-once, or exactly-once delivery.
 

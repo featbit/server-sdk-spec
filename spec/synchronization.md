@@ -2,7 +2,7 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 ## Endpoint construction and authentication
 
@@ -14,13 +14,13 @@ streaming?type=server&token=<connection-token>
 
 A base ending in `/featbit/` preserves that prefix. SDK documentation MUST explain this behavior or provide explicit, documented normalization. Query parameters MUST be URI-encoded.
 
-The reference sets `User-Agent: featbit-dotnet-server-sdk`, with `X-FeatBit-User-Agent` as a fallback on restricted .NET targets. Other SDKs SHOULD identify their own language and server-side SDK consistently.
+SDKs SHOULD identify their language and server-side SDK consistently through `User-Agent`, using `X-FeatBit-User-Agent` as a fallback when the runtime restricts that header.
 
 The current connection token format MUST be preserved unless the server protocol changes:
 
 1. Remove trailing `=` characters from the environment secret, producing `secret`.
 2. Obtain current Unix time in milliseconds as a decimal string `t`.
-3. Choose an insertion index `p`. The reference computes `max(floor(random_0_to_1 * length(secret)), 2)`; valid secrets must be long enough for this index.
+3. Choose an insertion index `p`. Compute `max(floor(random_0_to_1 * length(secret)), 2)`; valid secrets must be long enough for this index.
 4. Encode decimal digits using the following map.
 5. Produce `encode(p, 3) + encode(length(t), 2) + secret[0:p] + encode(t, length(t)) + secret[p:]`.
 
@@ -61,7 +61,7 @@ The periodic application keepalive message is:
 {"messageType":"ping","data":{}}
 ```
 
-This is separate from WebSocket protocol ping frames. The reference does not implement an application-level pong deadline. An SDK MAY add a documented liveness deadline if compatible with the server; it MUST NOT require an undocumented response.
+This is separate from WebSocket protocol ping frames. An application-level pong deadline is not required. An SDK MAY add a documented liveness deadline if compatible with the server; it MUST NOT require an undocumented response.
 
 Each logical JSON message MUST retain its WebSocket message boundary. Fragmented frames MUST be reassembled before parsing. Implementations MUST serialize concurrent outbound writes so that keepalive and sync JSON cannot interleave or be accidentally concatenated into one JSON message.
 
@@ -79,7 +79,7 @@ After a valid response, the new SDK MUST perform this observable sequence:
 
 **Hardening requirements:** full replacement and an entire patch batch MUST be atomic with respect to evaluation. If [data-change notifications](notifications.md) are implemented, readiness and initialization MUST be visible before user callbacks run. SDKs MAY omit these notifications for now.
 
-A valid no-op patch still establishes that synchronization succeeded and may restore `Ready`; it does not require a data-change notification. In the baseline, a valid patch can initialize a synchronizer with an already populated store. Public online bootstrap/persistent-store behavior remains an extension.
+A valid no-op patch still establishes that synchronization succeeded and may restore `Ready`; it does not require a data-change notification. A valid patch can initialize a synchronizer with an already populated store. Public online bootstrap/persistent-store behavior remains an extension.
 
 ## States
 
@@ -114,13 +114,13 @@ Offline initialization enters `Stable` directly. For new SDKs, `Stopped` is term
 | Transient initial connect failure or timeout | Retry in the background; remain `NotReady`. |
 | Abrupt disconnect or missing close status | Reconnect. |
 | Server normal closure, code `1000` | Reconnect unless the client explicitly stopped. |
-| Other server close codes, except `4003` | Reconnect under the reference policy. |
+| Other server close codes, except `4003` | Reconnect under the default policy. |
 | Server rejection, code `4003` | Stop permanently for this client instance. |
 | Explicit client close | Cancel retries and stop permanently. |
 
 The default delay is `delays[attempt % length(delays)]`: after 55 seconds the default schedule cycles back to zero. It does not cap at 55 seconds forever. Attempts reset after a successful connection. There is no default retry-count limit.
 
-A configurable exponential-backoff-with-jitter policy MAY be provided. The repository contains a separate jitter policy, but the WebSocket wrapper uses the configured delay array.
+A configurable exponential-backoff-with-jitter policy MAY be provided. The default policy uses the configured delay array.
 
 **Hardening requirements:** only one active reconnect operation may exist per client. Retry waits and connection attempts MUST be cancellable. Track reconnect work and join it during close before releasing its transport state. Associate asynchronous completions with their connection generation so an obsolete attempt cannot resurrect a stopped client or replace a newer connection.
 

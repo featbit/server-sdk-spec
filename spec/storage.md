@@ -2,7 +2,7 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 ## Required evaluation data
 
@@ -33,7 +33,7 @@ Unknown JSON fields MUST be tolerated to allow compatible server additions. Pres
 | Version | Maximum entity version, including archives; zero when empty. |
 | Populated | Whether a full population operation has occurred, even if it contained zero entities. |
 
-The reference key namespaces are `ff_<flag-key>` and `segment_<segment-id>`. Physical key formats may differ, but flags and segments MUST have separate logical namespaces. Flag keys and user keys are case-sensitive. Segment UUIDs SHOULD use canonical lowercase hyphenated strings; parsing and lookup MUST agree on their canonical representation.
+Example key namespaces are `ff_<flag-key>` and `segment_<segment-id>`. Physical key formats may differ, but flags and segments MUST have separate logical namespaces. Flag keys and user keys are case-sensitive. Segment UUIDs SHOULD use canonical lowercase hyphenated strings; parsing and lookup MUST agree on their canonical representation.
 
 Archives MUST be hidden from normal lookup and enumeration while retaining their versions. Otherwise an old patch could resurrect a deleted entity. A later, strictly newer non-archived entity may restore it. A full replacement may discard old tombstones because it replaces the complete snapshot.
 

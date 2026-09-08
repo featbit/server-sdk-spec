@@ -2,11 +2,11 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 ## User context
 
-A user consists of a required stable string key, an optional name defaulting to `""`, and custom string attributes. Attribute lookup follows the reference:
+A user consists of a required stable string key, an optional name defaulting to `""`, and custom string attributes. Attribute lookup follows these rules:
 
 | Property | Value |
 | --- | --- |
@@ -32,11 +32,11 @@ For each typed evaluation, use this exact precedence:
 
 A matched rule with no matching rollout MUST produce `Error / malformed flag`; it MUST NOT silently proceed to later rules or fallthrough. A missing selected variation is also malformed data. The hardening boundary in [error isolation](error_isolation.md) covers every selection path, including individual targets.
 
-The declared `variationType` is metadata in this reference: typed APIs attempt conversion of the selected string rather than rejecting solely on that declaration. Ports MUST preserve that behavior.
+The declared `variationType` is metadata: typed APIs attempt conversion of the selected string rather than rejecting solely on that declaration. SDKs MUST preserve that behavior.
 
 ## Result details and conversion
 
-| Reason kind | Meaning | Reference reason text |
+| Reason kind | Meaning | Suggested reason text |
 | --- | --- | --- |
 | `ClientNotReady` | No initialized data state. | `client not ready` |
 | `Off` | Configured disabled variation. | `flag off` |
@@ -68,7 +68,7 @@ Before applying an operator, look up the condition property and check whether it
 | `IsTrue`, `IsFalse` | Case-insensitive comparison to `true` or `false`; condition value is otherwise unused. |
 | Unknown operator | False, including an unknown name that sounds like a negated operator. |
 
-The reference returns false when an attribute is missing or either operand is null, even for boolean and negative operators. Numeric parse failures and NaN comparisons return false. Empty strings remain actual operands when the attribute exists. `[]` is a valid membership list: `IsOneOf` is false and `NotOneOf` is true for an existing, non-null user operand.
+Return false when an attribute is missing or either operand is null, even for boolean and negative operators. Numeric parse failures and NaN comparisons return false. Empty strings remain actual operands when the attribute exists. `[]` is a valid membership list: `IsOneOf` is false and `NotOneOf` is true for an existing, non-null user operand.
 
 **Hardening requirements:** use ordinal, locale-independent string operations and the finite numeric parsing rules above. An invalid list JSON value, invalid regex, or regex timeout MUST become a contained malformed-data outcome for the affected flag, rather than being inverted into a successful negative condition. Regex execution MUST have a bounded runtime or use an engine with bounded evaluation characteristics. SDKs MUST document their supported regex dialect and test common patterns across languages; unsupported patterns MUST NOT be silently reinterpreted.
 
@@ -88,7 +88,7 @@ Within one segment, evaluate in this order:
 3. Otherwise, return true if any segment rule matches; all conditions within that rule must match.
 4. Otherwise return false.
 
-Exclusion therefore wins when the user appears in both lists. Empty segment rules obey the same AND/OR semantics as ordinary rules. The reference evaluates segment rules with ordinary condition operators; recursive segment references are not allowed in FeatBit.
+Exclusion therefore wins when the user appears in both lists. Empty segment rules obey the same AND/OR semantics as ordinary rules. Evaluate segment rules with ordinary condition operators; recursive segment references are not allowed in FeatBit.
 
 ## Deterministic percentage rollout
 
@@ -103,7 +103,7 @@ n = signed_int32_little_endian(digest[0:4])
 bucket = abs(float64(n) / -2147483648.0)
 ```
 
-The bucket lies in `[0, 1]`, inclusive. Convert to floating point before taking the absolute value to avoid signed-integer overflow. Explicit little-endian decoding preserves the behavior of the reference on its usual little-endian platforms; native-endian APIs MUST NOT determine the result in a port. Do not use a language's built-in hash, unsigned decoding, a hash of hexadecimal text, or modulo 100.
+The bucket lies in `[0, 1]`, inclusive. Convert to floating point before taking the absolute value to avoid signed-integer overflow. Explicit little-endian decoding is required; native-endian APIs MUST NOT determine the result. Do not use a language's built-in hash, unsigned decoding, a hash of hexadecimal text, or modulo 100.
 
 For a valid interval `[lower, upper]`, match as follows:
 
@@ -115,53 +115,6 @@ else: lower <= bucket and bucket <= upper
 
 Both boundaries are inclusive. Adjacent intervals can both match their shared boundary; the first variation in stored order wins. Preserve the near-one shortcut exactly. Missing custom dispatch attributes produce `flag.key + ""`; do not silently substitute the user key. Distribution percentages are not recomputed or normalized by the SDK.
 
-The following is the original C# implementation from [DispatchAlgorithm.cs](https://github.com/featbit/dotnet-server-sdk/blob/fd1ed64d6a006b68ba6c29b763b7975e31fd9b12/src/FeatBit.ServerSdk/Evaluation/DispatchAlgorithm.cs). The `key` argument is the combined `dispatchInput` described above. `BitConverter.ToInt32` uses native byte order in C#; ports MUST use the explicit little-endian decoding specified above.
-
-```csharp
-using System;
-using System.Security.Cryptography;
-using System.Text;
-
-namespace FeatBit.Sdk.Server.Evaluation
-{
-    internal static class DispatchAlgorithm
-    {
-        public static bool IsInRollout(string key, double[] rollouts)
-        {
-            var min = rollouts[0];
-            var max = rollouts[1];
-
-            // if [0, 1]
-            if (min == 0d && 1d - max < 1e-5)
-            {
-                return true;
-            }
-
-            // if [0, 0]
-            if (min == 0d && max == 0d)
-            {
-                return false;
-            }
-
-            var rollout = RolloutOfKey(key);
-            return rollout >= min && rollout <= max;
-        }
-
-        public static double RolloutOfKey(string key)
-        {
-            using (var hasher = MD5.Create())
-            {
-                var hashedKey = hasher.ComputeHash(Encoding.UTF8.GetBytes(key));
-                var magicNumber = BitConverter.ToInt32(hashedKey, 0);
-                var percentage = Math.Abs((double)magicNumber / int.MinValue);
-
-                return percentage;
-            }
-        }
-    }
-}
-```
-
 These inputs are already-combined hash keys, not separate flag/user arguments:
 
 | Hash input | Expected bucket |
@@ -170,7 +123,7 @@ These inputs are already-combined hash keys, not separate flag/user arguments:
 | `qKPKh1S3FolC` | `0.9105919692665339` |
 | `3eacb184-2d79-49df-9ea7-edd4f10e4c6f` | `0.08994403155520558` |
 
-These vectors come from `DispatchAlgorithmTests`. Conformance tests MUST additionally cover UTF-8 non-ASCII input, negative signed hashes, both interval endpoints, and the near-one shortcut.
+These vectors define the expected hash results. Conformance tests MUST additionally cover UTF-8 non-ASCII input, negative signed hashes, both interval endpoints, and the near-one shortcut.
 
 ## Experiment eligibility
 
@@ -185,4 +138,4 @@ Do not reuse the flag bucket for experiment sampling: the `expt` prefix produces
 
 ## All-variations API
 
-Return one raw-string evaluation detail per active flag and record no analytics events. Ordering is unspecified. The reference evaluates whatever is in the store without the typed API's initialization check; its initially empty store naturally returns an empty array.
+Return one raw-string evaluation detail per active flag and record no analytics events. Ordering is unspecified. Evaluate the committed store without the typed API's initialization check; an empty store returns an empty array.

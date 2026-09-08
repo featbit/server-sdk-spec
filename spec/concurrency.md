@@ -2,9 +2,7 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
-
-The requirements in this module include hardening guarantees for new SDKs; see [reference implementation gaps](reference.md#reference-implementation-gaps-and-deliberate-portability-decisions) for differences from the inspected .NET implementation.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 These requirements apply to threaded runtimes and to asynchronous interleavings in single-threaded runtimes.
 

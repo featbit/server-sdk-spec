@@ -2,9 +2,7 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
-
-The requirements in this module include hardening guarantees for new SDKs; see [reference implementation gaps](reference.md#reference-implementation-gaps-and-deliberate-portability-decisions) for differences from the inspected .NET implementation.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
 Close MUST be idempotent and safe when called before initialization, during retry delay, during an active connection attempt, after terminal rejection, and concurrently from multiple callers.
 

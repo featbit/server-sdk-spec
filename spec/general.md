@@ -3,8 +3,6 @@
 [Specification index](../README.md)
 
 - Specification version: 1.0 (draft; not a released conformance target)
-- Reference inspection date: 2026-09-02
-- Reference implementation: [FeatBit .NET Server SDK at `fd1ed64d6a006b68ba6c29b763b7975e31fd9b12`](https://github.com/featbit/dotnet-server-sdk/blob/fd1ed64d6a006b68ba6c29b763b7975e31fd9b12)
 
 ## Purpose and requirement levels
 
@@ -53,14 +51,14 @@ Each SDK MUST provide idiomatic equivalents of the operations below, except thos
 | Track | Record a named custom event, with numeric value defaulting to `1.0`. |
 | Flush | Request asynchronous processing of pending events. |
 | Flush and wait | Wait for a defined event-processing barrier within a timeout. |
-| Subscribe/unsubscribe (Optional) | Observe committed local data changes. Other SDKs MAY omit this preliminary capability for now; see [Data-Change Notifications](notifications.md). |
+| Subscribe/unsubscribe (Optional) | Observe committed local data changes. SDKs MAY omit this preliminary capability for now; see [Data-Change Notifications](notifications.md). |
 | Close | Stop background activity and attempt a bounded final event flush. |
 
-The .NET data-change notification implementation is preliminary and may change. Notification-specific requirements throughout this specification apply only to SDKs that implement the optional capability.
+The data-change notification capability is preliminary and may change. Notification-specific requirements throughout this specification apply only to SDKs that implement the optional capability.
 
 Notes:
 
-1. Boolean, string, integer, and floating-point evaluation MUST be supported. Separate 32-bit float and 64-bit double APIs are language-dependent. If an SDK exposes a .NET-compatible integer API, its range is signed 32-bit. A JSON convenience API MAY be added; the reference only returns JSON flag values as strings.
+1. Boolean, string, integer, and floating-point evaluation MUST be supported. Separate 32-bit float and 64-bit double APIs are language-dependent. If an SDK exposes a 32-bit integer API, its range is signed 32-bit. A JSON convenience API MAY be added; the required string API returns JSON flag values as strings.
 2. Applications SHOULD retain one client per environment for the process lifetime. Multiple clients MUST isolate credentials, stores, synchronization state, and event queues. Framework integration SHOULD register the client as a singleton and close it during application shutdown.
 
 ## Diagnostics
@@ -72,3 +70,7 @@ Logs MUST redact environment secrets, authorization headers, and token-bearing U
 ## Performance and extensibility
 
 Evaluation SHOULD perform bounded local work, with no disk/network I/O and no global lock shared with network delivery.
+
+## Compatibility changes
+
+Selection order, wire fields, hash assignments, interval boundaries, and experiment eligibility are cross-SDK compatibility requirements. Any future change MUST be reviewed as an explicit cross-SDK behavior change and accompanied by updated shared fixtures.

@@ -2,9 +2,9 @@
 
 [Specification index](../README.md) | [General requirements](general.md)
 
-The scope, requirement levels, and reference baseline in [General Requirements](general.md) apply to this module.
+The scope and requirement levels in [General Requirements](general.md) apply to this module.
 
-Each new SDK MUST ship deterministic tests plus integration tests against the supported FeatBit evaluation/insight service. The following matrix is a release gate for the new SDK, not a statement that all scenarios are covered by current .NET tests. [Data-change notifications](notifications.md) are optional and preliminary: all notification-specific assertions, including those in initialization and synchronization scenarios, apply only when the capability is implemented. Omitting this capability does not block release.
+Each new SDK MUST ship deterministic tests plus integration tests against the supported FeatBit evaluation/insight service. The following matrix is a release gate for the new SDK. [Data-change notifications](notifications.md) are optional and preliminary: all notification-specific assertions, including those in initialization and synchronization scenarios, apply only when the capability is implemented. Omitting this capability does not block release.
 
 | Area | Required scenarios and assertions |
 | --- | --- |
