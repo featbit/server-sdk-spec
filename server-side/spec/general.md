@@ -4,7 +4,7 @@
 
 ## Scope and requirement levels
 
-This draft defines observable behavior for trusted, multi-user server applications that hold an environment secret and locally evaluate a complete environment data set. It is not a client-side SDK specification.
+This draft defines observable behavior for trusted, multi-user server applications that hold an environment secret and locally evaluate a complete environment data set.
 
 **MUST** means required behavior, **SHOULD** means recommended behavior whose omission needs a documented reason, and **MAY** means optional capability.
 
@@ -29,7 +29,7 @@ Runtime-fatal failures remain subject to host-language rules. This specification
 
 ## Predictable resource use
 
-Evaluation MUST use local data without network requests or waiting for analytics delivery. Reads and updates must remain coherent under the runtime's supported concurrent use.
+Evaluation MUST use local data without network requests or waiting for events delivery. Reads and updates must remain coherent under the runtime's supported concurrent use.
 
 SDKs MUST bound event retention, network attempts, caller waits, and shutdown work. Outages and repeated errors must not cause unlimited memory growth or continuous busy retries. Changes to caller-owned inputs must not silently alter recorded events or committed SDK state.
 
@@ -47,4 +47,4 @@ The same flag data, user attributes, and requested value type must produce equiv
 
 Changes to these contracts require explicit cross-SDK review and corresponding fixture updates. Runtime-specific API spelling, regex dialect limitations, numeric ranges, and optional extensions must be documented.
 
-The .NET Server SDK helps explain existing behavior, but its internal implementation and current limitations do not automatically become requirements. This document is a shared design target, not a claim that any existing SDK already satisfies every requirement.
+The [.NET Server SDK](https://github.com/featbit/featbit-dotnet-sdk) helps explain existing behavior, but its internal implementation and current limitations do not automatically become requirements. This document is a shared design target, not a claim that any existing SDK already satisfies every requirement.

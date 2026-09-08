@@ -46,7 +46,7 @@ Notifications are preliminary and MAY be omitted without affecting core conforma
 
 - A full replacement reports both categories, even for an empty replacement.
 - A patch reports only categories with effective inserts, updates, or archives; duplicate/older/skipped records do not trigger a patch notification.
-- Segment-only changes are observable because they can affect flag results.
+- The flags-changed and segments-changed indicators are independent: a patch touching only segments MUST report segments changed without implying flags changed, even though segment changes can affect flag evaluation results.
 
 Publish notifications after the data and readiness state are visible, in committed update order. They report data changes, not guaranteed changes to a particular user's evaluated value. Per-flag identification and replay are not required.
 
