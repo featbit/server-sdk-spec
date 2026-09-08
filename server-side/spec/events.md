@@ -8,8 +8,8 @@ Events support usage analytics and experimentation. Collection must remain inexp
 
 | Operation or condition | Event behavior |
 | --- | --- |
-| Successful typed evaluation, including Off | Record one event after conversion succeeds, using the selected variation ID and original string value. |
-| Fallback, including WrongType or ClientNotReady | Do not record an evaluation event. |
+| Successful typed evaluation | Record one event after conversion succeeds, using the selected variation ID and original string value. |
+| Fallback, including `WrongType` or `ClientNotReady` | Do not record an evaluation event. |
 | Bulk evaluation | Do not record evaluation events. |
 | Track | Record a named custom event; the numeric value defaults to 1.0. Initialization is not required. |
 | Offline, events disabled, or client closed | Suppress event collection and delivery. |
@@ -41,7 +41,7 @@ Delivery is best effort. Overflow, exhausted retries, shutdown deadlines, and pr
 
 ## Flush and shutdown
 
-Flush requests prompt processing and returns without waiting for the server. A waiting form must identify the events accepted before the call and wait for their processing to finish, including work already in progress, within the requested timeout. Later events need not delay that call.
+`Flush` requests prompt processing and returns without waiting for the server. A waiting form (`FlushAndWait`) must identify the events accepted before the call and wait for their processing to finish, including work already in progress, within the requested timeout. Later events need not delay that call.
 
 Processing completion means those events were sent or reached a final failure/drop outcome; it is not proof that every event was delivered. Report completion separately from timeout and document whether delivery continues after a waiting timeout.
 

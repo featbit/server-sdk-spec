@@ -14,8 +14,8 @@ Attribute lookup distinguishes missing values from present empty strings. Missin
 
 For a typed evaluation:
 
-1. If the client has not initialized, return the caller's fallback with ClientNotReady.
-2. Find the active flag. A missing or archived flag returns an Error fallback.
+1. If the client has not initialized, return the caller's fallback with `ClientNotReady`.
+2. Find the active flag. A missing or archived flag returns an `Error` fallback.
 3. If the flag is disabled, select its configured disabled variation.
 4. Otherwise, use the first individual target containing the user key.
 5. Otherwise, use the first rule whose conditions all match, then select its rollout variation.
@@ -24,7 +24,7 @@ For a typed evaluation:
 
 The configured disabled variation and default rollout are normal results. They are distinct from the application-supplied fallback used when evaluation fails.
 
-Rules and targets retain their server-defined order. Conditions within a rule use AND; rules are ordered alternatives. A valid empty condition list matches; a malformed or null list must not become an empty matching rule. A matched rule with an invalid rollout or missing selected variation returns an error rather than trying a later rule.
+Rules and targets retain their server-defined order. Conditions within a rule use AND; rules are ordered alternatives. A matched rule with an invalid rollout or missing selected variation returns an error rather than trying a later rule.
 
 ## Matching and percentage rollout
 
@@ -60,4 +60,4 @@ Recoverable evaluation errors MUST return fallback without escaping through the 
 
 Evaluation errors MUST NOT roll back storage, change the synchronization cursor, or trigger resynchronization. Event-processing errors MUST NOT change a successfully computed result. Fallback results, including WrongType, produce no evaluation events.
 
-Bulk evaluation returns raw-string details for active flags without analytics. One bad flag must not prevent healthy results; its detail reports Error with no selected variation and an empty string value. It reads the committed store without the typed API initialization gate; an empty store returns an empty collection.
+Bulk evaluation returns raw-string details for active flags without events. One bad flag must not prevent healthy results; its detail reports Error with no selected variation and an empty string value. It reads the committed store without the typed API initialization gate; an empty store returns an empty collection.
