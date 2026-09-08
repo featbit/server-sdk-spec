@@ -9,7 +9,7 @@ This specification describes the behavior of FeatBit server-side SDKs across lan
 | Module | Scope |
 | --- | --- |
 | 1. [User Configuration](spec/configuration.md) | Environment secret, server URLs, startup, offline mode, and event settings. |
-| 2. [Data Synchronization](spec/synchronization.md) | WebSocket initialization, updates, connection recovery, and readiness. |
+| 2. [Data Synchronization](spec/synchronization.md) | Required WebSocket and optional Polling modes, initialization, updates, recovery, and readiness. |
 | 3. [Data Storage](spec/storage.md) | Local data, full replacement, versioned updates, and consistent reads. |
 | 4. [Feature Flag Evaluation](spec/evaluation.md) | User context, targeting order, percentage rollout, results, and fallback. |
 | 5. [Event Processing](spec/events.md) | Event collection, bounded buffering, batch delivery, retries, and flush. |
