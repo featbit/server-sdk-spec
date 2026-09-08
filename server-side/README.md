@@ -24,4 +24,4 @@ The [server protocol](reference/protocol.md) and [evaluation compatibility rules
 
 The [acceptance checklist](spec/conformance.md) summarizes observable scenarios to verify. [Shared fixtures](fixtures/README.md) are planned; no executable shared fixture suite is currently included.
 
-The .NET Server SDK is a behavioral reference, not a mandatory architecture or proof of conformance. Existing SDK behavior must be checked against this draft before claiming compliance.
+The [.NET Server SDK](https://github.com/featbit/featbit-dotnet-sdk) is a behavioral reference, not a mandatory architecture or proof of conformance. Existing SDK behavior must be checked against this draft before claiming compliance.

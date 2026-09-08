@@ -79,6 +79,8 @@ These inputs are already-combined hash keys, not separate flag/user arguments:
 
 These vectors define the expected hash results. Conformance tests MUST additionally cover UTF-8 non-ASCII input, negative signed hashes, both interval endpoints, and the near-one shortcut.
 
+See the [.NET SDK's `DispatchAlgorithm`](https://github.com/featbit/featbit-dotnet-sdk/blob/main/src/FeatBit.ServerSdk/Evaluation/DispatchAlgorithm.cs) for a reference implementation of this algorithm.
+
 ## Experiment eligibility
 
 An evaluation event's `sendToExperiment` is calculated independently from its selected flag value:

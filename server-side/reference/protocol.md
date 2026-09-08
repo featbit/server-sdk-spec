@@ -30,6 +30,8 @@ The current connection token format MUST be preserved unless the server protocol
 
 `encode(n, width)` left-pads the decimal representation with zeroes, keeps the rightmost `width` digits, then substitutes each digit. Generate a fresh token on every connection attempt. Do not substitute JWT, Base64 encoding, or an invented bearer-token scheme. This format is reversible obfuscation, so token-bearing URLs MUST be treated as credentials in diagnostics.
 
+See the [.NET SDK's `ConnectionToken`](https://github.com/featbit/featbit-dotnet-sdk/blob/main/src/FeatBit.ServerSdk/Transport/ConnectionToken.cs) for a reference implementation of this algorithm.
+
 ## Message protocol
 
 The SDK sends a JSON text message immediately after each successful connection:
@@ -61,7 +63,13 @@ The periodic application keepalive message is:
 {"messageType":"ping","data":{}}
 ```
 
-This is separate from WebSocket protocol ping frames. An application-level pong deadline is not required. An SDK MAY add a documented liveness deadline if compatible with the server; it MUST NOT require an undocumented response.
+This is separate from WebSocket protocol ping frames. The server responds to this message with a `pong` message:
+
+```json
+{"messageType":"pong","data":{}}
+```
+
+Detecting or acting on the `pong` response is optional and left to each SDK's discretion. An application-level pong deadline is not required: SDKs are not required to detect or act on the absence of a `pong`. An SDK MAY add a documented liveness deadline if compatible with the server; it MUST NOT require an undocumented response.
 
 Each logical JSON message MUST retain its WebSocket message boundary. Fragmented frames MUST be reassembled before parsing. Implementations MUST serialize concurrent outbound writes so that keepalive and sync JSON cannot interleave or be accidentally concatenated into one JSON message.
 
